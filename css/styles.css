@@ -1,0 +1,294 @@
+/* Estilo para ocultar la "x" en los campos de entrada en Internet Explorer y Edge */
+input[type="text"]::-ms-clear,
+input[type="text"]::-ms-reveal {
+    display: none;
+}
+
+/* Estilo para ocultar los botones de limpiar y cancelar en los campos de búsqueda en Chrome y Safari */
+input[type="search"]::-webkit-search-clear-button,
+input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+}
+/* Estilo del scroll */
+::-webkit-scrollbar {
+    width: 10px; /* Grosor del scroll */
+  }
+  
+  /* Track */
+  ::-webkit-scrollbar-track {
+    background: #212e5db9; /* Color del fondo del scroll */
+  }
+  
+  /* Handle */
+  ::-webkit-scrollbar-thumb {
+    background: var(--primario); /* Color del handle del scroll */
+  }
+  
+  /* Handle al hacer hover */
+  ::-webkit-scrollbar-thumb:hover {
+    background: #34a1eb; /* Color del handle al hacer hover */
+  }
+  
+
+/* Definición de una variable CSS para el color primario */
+:root {
+    --primario: #2aa9ff;
+}
+
+/* Estilos generales */
+* {
+    margin: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+    list-style: none;
+    outline: none;
+    border: none;
+    text-decoration: none;
+}
+
+/* Estilos del cuerpo de la página */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: white;
+    height: 100vh;
+    background: linear-gradient(#080f28 50%, rgb(8, 15, 40) 50%);
+}
+
+/* Estilos del encabezado */
+header {
+    height: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1pc;
+    flex-wrap: wrap;
+}
+
+/* Estilos del contenedor principal */
+.container {
+    display: flex;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Estilos del fondo */
+.background-fondo {
+    display: flex;
+    padding: 2pc;
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+    width: 100%;
+    height: 100%;
+    flex-flow: column wrap;
+}
+/* Estilos de la imagen */
+img {
+    width: 200px;
+    height: 350px;
+}
+
+/* Estilos del logo */
+.logo a p {
+    font-weight: 700;
+    font-size: 2pc;
+    color: rgb(255, 255, 255);
+}
+
+.logo span,span {
+    color: var(--primario); /* Uso de la variable CSS */
+}
+
+
+/* Estilos del campo de búsqueda */
+#search-input {
+    font-size: .8pc;
+    font-weight: 700;
+    color: #ffffffec;
+    background: transparent;
+    width: 100%;
+}
+
+/* Estilos del contenedor del buscador */
+.buscador {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Estilos del botón de búsqueda */
+button#search-button {
+    padding: 10px 20px;
+    background: var(--primario); /* Uso de la variable CSS */
+    font-size: 1pc;
+    font-weight: 700;
+    color: white;
+    border-radius: 10px;
+}
+
+/* Estilos del botón de búsqueda al pasar el cursor */
+button#search-button:hover {
+    background: #ffffff;
+    color: black;
+}
+
+/* Estilos del ícono */
+.icono {
+    width: 30px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Estilos del contenedor de búsqueda */
+.buscar {
+    display: flex;
+    border: 2px solid var(--primario); /* Uso de la variable CSS */
+    border-radius: 7px;
+    height: 45px;
+}
+
+/* Estilos del título */
+h1 {
+    color: #ffffff;
+}
+
+/* Estilos del iframe */
+iframe {
+    width: 500px;
+}
+
+/* Estilos del contenedor de paginación */
+.pagination-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 1pc;
+}
+
+/* Estilos de los botones de paginación */
+button {
+    margin-right: 15px;
+    border-radius: 5px;
+    box-shadow: 0 10px 20px 0 rgba(4, 122, 255, .05);
+    color: #f9f9f9;
+    cursor: pointer;
+    letter-spacing: 1px;
+    outline: none;
+    padding: 9px 20px;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: box-shadow 85ms, transform 85ms;
+    transition-timing-function: ease-in-out;
+    font: 15px Avenir-Heavy, sans-serif;
+    font-weight: 900;
+}
+
+/* Estilos del botón de página anterior */
+#previous-page {
+    background: linear-gradient(145deg, #00e18c, #00e36a);
+}
+
+/* Estilos del botón de página siguiente */
+#next-page {
+    background: linear-gradient(145deg, #2196f3, #1565c0);
+}
+
+/* Estilos del párrafo */
+p {
+    width: 80%;
+}
+
+/* Estilos del botón */
+a.btn {
+    display: flex;
+    width: 200px;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn {
+    background-color: #f9f9f9;
+    border: none;
+    border-radius: 5px;
+    color: #090b13;
+    cursor: pointer;
+    letter-spacing: 1.5px;
+    padding: 15px 20px;
+    text-transform: uppercase;
+}
+
+/* Estilos de la sección de datos de películas */
+.datos-peliculas {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 1pc 0;
+}
+
+/* Estilos del contenedor de información de películas */
+#movie-info {
+    overflow: auto;
+    height: 100%;
+}
+
+/* Estilos del fondo */
+.background {
+    height: 100%; /* 100% del viewport height */
+    min-height: 100%;
+    width:100%; /* 100% del viewport width */
+    min-width: 100%;
+}
+
+
+/* Estilos del contenedor de YouTube */
+.youtube {
+    position: absolute;
+    width: 96%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+
+@media only screen and (max-width: 850px) {
+    body{
+        height: auto;
+    }
+
+    .background-fondo {
+        height: auto;
+    }
+    .youtube {
+        height: 100%;
+        width: 100%;
+        position: static;
+        justify-content: center;
+    }
+    img {
+        width: 150px;
+        height: 300px;
+    }
+    .logo a p {
+        font-size: 1.5pc;
+    }
+    .buscar {
+        height: 35px;
+    }
+    button {
+        font: 12px Avenir-Heavy, sans-serif;
+    }
+    button#search-button {
+        padding: 10px 20px;
+        font-size: .7pc;
+    }
+    p {
+        width: 100%;
+    }
+}

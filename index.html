@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Películas de TMDb con Paginación y Búsqueda</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="img/PictureReel.png" type="image/png">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <a href="#">
+                    <p>Picture<span>Reel</span></p>
+                </a>
+            </div>
+            <div class="buscador">
+                <div class="buscar">
+                    <div class="icono">
+                        <svg style="color: var(---primario); width: 20px;" aria-hidden="true"
+                            class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="../www.w3.org/2000/svg.html">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="search" name="search" id="search-input" autocomplete="off"
+                        placeholder="Buscar anime..." required="">
+                </div>
+                <button id="search-button">Buscar</button>
+            </div>
+        </header>
+
+        <div id="movie-info">
+        </div>
+
+        <div class="pagination-container">
+            <button id="previous-page">Anterior</button>
+            <button id="next-page">Siguiente</button>
+        </div>
+    </div>
+
+    <script src="js/peliculas.js"></script>
+</body>
+
+</html>
