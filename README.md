@@ -1,10 +1,27 @@
-Por supuesto, aquí está la sección de tecnologías utilizadas con un icono añadido:
 
 ---
 
 # 🎬 PictureReel: Películas de TMDb con Paginación y Búsqueda 🎥
 
+// Clave de API para acceder a la API de The Movie Database (TMDb)
+const apiKey = '011e76f650e4be279c8687bb0ad90c27';
+
+// Número de la página inicial
+let currentPage = 1;
+
+function fetchMovies(page, searchTerm = '') {
+    // Construir la URL de la API según la página y el término de búsqueda
+    let apiURL = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&page=${page}`;
+
+    // Agregar el término de búsqueda si se proporciona
+    if (searchTerm) {
+        apiURL = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&page=${page}&query=${searchTerm}`;
+    }
+}
+
+
 ## Descripción
+
 PictureReel es un proyecto que utiliza la API de The Movie Database (TMDb) para mostrar películas con funcionalidades de paginación y búsqueda.
 
 ## 🛠️ Instalación
