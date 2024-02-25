@@ -22,12 +22,11 @@ PictureReel es un proyecto que utiliza la API de The Movie Database (TMDb) para 
 
 ## Redirección a la página 🔗
 
-Para acceder a NextMovie, visita [NextMovie](https://inquisitive-pony-28778a.netlify.app/).
-
-![Preview en Windows](https://github.com/DannyCrisostomo/PictureReel/blob/4f5727024fa700623c6b72a04fc406ff00899f18/img/windows.png)
+Para acceder a PictureReel, visita [PictureReel](https://inquisitive-pony-28778a.netlify.app/).
 
 ![Preview en Móvil](https://github.com/DannyCrisostomo/PictureReel/blob/4f5727024fa700623c6b72a04fc406ff00899f18/img/movil.png)
 
+![Preview en Windows](https://github.com/DannyCrisostomo/PictureReel/blob/4f5727024fa700623c6b72a04fc406ff00899f18/img/windows.png)
 
 ## Iconos utilizados
 - 🎥 - Película
