@@ -2,7 +2,7 @@
 ---
 
 # 🎬 PictureReel: Películas de TMDb con Paginación y Búsqueda 🎥
-```
+```javascript
 // Clave de API para acceder a la API de The Movie Database (TMDb)
 const apiKey = '011e76f650e4be279c8687bb0ad90c27';
 
