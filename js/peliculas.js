@@ -1,3 +1,5 @@
+
+
 // Clave de API para acceder a la API de The Movie Database (TMDb)
 const apiKey = '011e76f650e4be279c8687bb0ad90c27';
 
@@ -111,3 +113,25 @@ document.getElementById('search-button').addEventListener('click', () => {
     // Realizar la búsqueda de películas con el término proporcionado
     fetchMovies(currentPage, searchTerm);
 });
+
+//spinner de conexion a internet
+const spinner = document.getElementById('spinner');
+
+function showSpinner() {
+  spinner.style.display = 'block';
+}
+
+function hideSpinner() {
+  spinner.style.display = 'none';
+}
+
+// Llamar a las funciones al cargar la página para manejar el estado inicial de la conexión
+window.addEventListener('load', () => {
+    if (!navigator.onLine) {
+        showSpinner();
+    }
+});
+
+// Llamar a las funciones cuando cambie el estado de la conexión
+window.addEventListener('online', hideSpinner);
+window.addEventListener('offline', showSpinner);
