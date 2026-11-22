@@ -288,7 +288,7 @@ async function openModal(id, type, autoplay) {
         const logos = unique.map(p => `<img src="${IMAGE_URL}w92${p.logo_path}" alt="${escapeHTML(p.provider_name)}" title="${escapeHTML(p.provider_name)}">`).join('');
 
         modal.innerHTML = `
-            <div class="sheet-head"><span class="grip"></span><button class="close-modal" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="sheet-head"><span class="grip"></span><button class="close-modal" aria-label="Cerrar"><span>Cerrar</span><i class="fa-solid fa-xmark"></i></button></div>
             <div class="modal-backdrop" id="mb" style="background-image:url('${bg}')">
                 ${trailer ? '<button class="big-play" id="m-big" aria-label="Reproducir tráiler"><i class="fa-solid fa-play"></i></button>' : ''}
             </div>
@@ -321,7 +321,7 @@ async function openModal(id, type, autoplay) {
         btn.onclick = () => { toggleList(m, type); label(); listChanged = true; };
         if (autoplay && trailer) play();
     } catch (e) {
-        modal.innerHTML = `<div class="sheet-head"><button class="close-modal" aria-label="Cerrar" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark"></i></button></div><p class="loading">${escapeHTML(e.message)}</p>`;
+        modal.innerHTML = `<div class="sheet-head"><button class="close-modal" aria-label="Cerrar" onclick="this.closest('dialog').close()"><span>Cerrar</span><i class="fa-solid fa-xmark"></i></button></div><p class="loading">${escapeHTML(e.message)}</p>`;
     }
 }
 
