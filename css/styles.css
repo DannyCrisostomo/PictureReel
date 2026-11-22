@@ -153,3 +153,9 @@ dialog[open]{animation:sheetIn .3s ease}
   body.no-hero #content{padding-top:80px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important}}
+
+/* BLOQUEO DE SELECCIÓN Y ZOOM TÁCTIL */
+html,body{touch-action:pan-x pan-y}
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+input{-webkit-user-select:text;user-select:text}
+img{-webkit-user-drag:none;user-drag:none}
