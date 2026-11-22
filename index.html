@@ -6,181 +6,615 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#080808">
-<link rel="stylesheet" href="css/style.css">
-<script src="js/script.js" defer></script>
 
-    <title>PictureReel | Tu mundo de películas</title>
+    <meta name="description" content="PictureReel: descubre películas populares, estrenos, clásicos y los mejores tráilers.">
 
-    <link rel="stylesheet" href="style.css">
+    <title>PictureReel - Películas y Series</title>
 
+    <!-- Favicon -->
+    <link rel="icon" href="assets/favicon.ico">
+
+    <!-- CSS PRINCIPAL -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- FONT AWESOME -->
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- FUENTE -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
 </head>
 
 <body>
 
-    <div class="container">
+    <!-- =====================================
+         CONTENEDOR PRINCIPAL
+    ====================================== -->
 
-        <!-- NAVEGACIÓN -->
-        <header class="navbar">
+    <div class="app">
 
-            <div class="logo">
-                <a href="#">
+        <!-- =====================================
+             NAVBAR
+        ====================================== -->
+
+        <header class="navbar" id="navbar">
+
+            <div class="navbar-left">
+
+                <!-- LOGO -->
+                <a href="#inicio" class="logo">
                     Picture<span>Reel</span>
                 </a>
+
+                <!-- NAVEGACIÓN -->
+                <nav class="nav-links" id="nav-links">
+
+                    <a href="#inicio" class="active">
+                        Inicio
+                    </a>
+
+                    <a href="#populares">
+                        Populares
+                    </a>
+
+                    <a href="#mejor-valoradas">
+                        Mejor valoradas
+                    </a>
+
+                    <a href="#proximamente">
+                        Próximamente
+                    </a>
+
+                </nav>
+
             </div>
 
-            <nav class="nav-links">
-                <a href="#inicio" class="active">Inicio</a>
-                <a href="#populares">Populares</a>
-                <a href="#mejor-valoradas">Mejor valoradas</a>
-                <a href="#proximamente">Próximamente</a>
-            </nav>
+            <!-- ACCIONES -->
+            <div class="navbar-right">
 
-            <div class="nav-actions">
+                <!-- BUSCADOR -->
+                <div class="search-container" id="search-container">
 
-                <div class="search-box">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <button
+                        class="search-icon"
+                        id="search-toggle"
+                        aria-label="Abrir buscador"
+                        type="button">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                    </button>
+
                     <input
                         type="search"
                         id="search-input"
                         placeholder="Buscar películas..."
-                    >
-                    <button id="search-button" aria-label="Buscar">
+                        autocomplete="off"
+                        aria-label="Buscar películas">
+
+                    <button
+                        id="search-button"
+                        type="button"
+                        aria-label="Buscar">
+
                         <i class="fa-solid fa-arrow-right"></i>
+
                     </button>
+
                 </div>
 
-                <button class="mobile-menu" aria-label="Abrir menú">
+                <!-- PERFIL / MENÚ MÓVIL -->
+                <button
+                    class="mobile-menu"
+                    id="mobile-menu"
+                    aria-label="Abrir menú"
+                    aria-expanded="false"
+                    type="button">
+
                     <i class="fa-solid fa-bars"></i>
+
                 </button>
 
             </div>
 
         </header>
 
-        <!-- CONTENIDO -->
-        <main>
 
-            <!-- PELÍCULA DESTACADA -->
+        <!-- =====================================
+             CONTENIDO PRINCIPAL
+        ====================================== -->
+
+        <main id="main-content">
+
+            <!-- =====================================
+                 HERO / PELÍCULA DESTACADA
+            ====================================== -->
+
             <section class="hero" id="inicio">
 
-                <div id="movie-info">
-                    <!-- JavaScript cargará la película destacada -->
+                <div id="movie-info" class="hero-content">
+
+                    <!--
+                    JAVASCRIPT:
+                    Aquí se mostrará la película destacada.
+                    Incluye:
+                    - Imagen de fondo
+                    - Título
+                    - Descripción
+                    - Puntuación
+                    - Botón de detalles
+                    - Botón de tráiler
+                    -->
+
+                    <div class="hero-loading">
+
+                        <div class="hero-loading-text">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="hero-gradient"></div>
+
+            </section>
+
+
+            <!-- =====================================
+                 RESULTADOS DE BÚSQUEDA
+            ====================================== -->
+
+            <section class="movie-section search-section"
+                id="search-results"
+                hidden>
+
+                <div class="section-header">
+
+                    <div>
+                        <h2>Resultados de búsqueda</h2>
+
+                        <p id="search-description">
+                            Películas encontradas
+                        </p>
+                    </div>
+
+                    <button
+                        class="clear-search"
+                        id="clear-search"
+                        type="button">
+
+                        <i class="fa-solid fa-xmark"></i>
+                        Limpiar búsqueda
+
+                    </button>
+
+                </div>
+
+                <div class="movie-grid" id="search-movies">
+
+                    <!-- RESULTADOS DE BÚSQUEDA -->
+
                 </div>
 
             </section>
 
-            <!-- BUSCADOR RESULTADOS -->
-            <section class="search-results" id="search-results">
-                <h2>Resultados de búsqueda</h2>
 
-                <div id="search-movies" class="movie-grid">
-                    <!-- Resultados dinámicos -->
-                </div>
-            </section>
+            <!-- =====================================
+                 POPULARES
+            ====================================== -->
 
-            <!-- PELÍCULAS POPULARES -->
             <section class="movie-section" id="populares">
 
-                <div class="section-heading">
-                    <h2>Películas populares</h2>
-                    <span>Descubre lo más visto</span>
+                <div class="section-header">
+
+                    <div>
+                        <h2>
+                            Tendencias ahora
+                            <span class="title-accent">.</span>
+                        </h2>
+
+                        <p>Las películas más populares</p>
+                    </div>
+
+                    <div class="carousel-controls">
+
+                        <button
+                            class="carousel-btn"
+                            data-target="popular-movies"
+                            data-direction="left"
+                            aria-label="Anterior"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-left"></i>
+
+                        </button>
+
+                        <button
+                            class="carousel-btn"
+                            data-target="popular-movies"
+                            data-direction="right"
+                            aria-label="Siguiente"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-right"></i>
+
+                        </button>
+
+                    </div>
+
                 </div>
 
-                <div id="popular-movies" class="movie-row">
-                    <!-- Películas dinámicas -->
+                <div class="movie-row" id="popular-movies">
+
+                    <!-- PELÍCULAS POPULARES -->
+
                 </div>
 
             </section>
 
-            <!-- MEJOR VALORADAS -->
+
+            <!-- =====================================
+                 MEJOR VALORADAS
+            ====================================== -->
+
             <section class="movie-section" id="mejor-valoradas">
 
-                <div class="section-heading">
-                    <h2>Las mejor valoradas</h2>
-                    <span>Historias que debes ver</span>
+                <div class="section-header">
+
+                    <div>
+                        <h2>
+                            Las mejor valoradas
+                            <span class="title-accent">.</span>
+                        </h2>
+
+                        <p>Historias que merecen ser vistas</p>
+                    </div>
+
+                    <div class="carousel-controls">
+
+                        <button
+                            class="carousel-btn"
+                            data-target="top-rated-movies"
+                            data-direction="left"
+                            aria-label="Anterior"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-left"></i>
+
+                        </button>
+
+                        <button
+                            class="carousel-btn"
+                            data-target="top-rated-movies"
+                            data-direction="right"
+                            aria-label="Siguiente"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-right"></i>
+
+                        </button>
+
+                    </div>
+
                 </div>
 
-                <div id="top-rated-movies" class="movie-row">
-                    <!-- Películas dinámicas -->
+                <div class="movie-row" id="top-rated-movies">
+
+                    <!-- MEJOR VALORADAS -->
+
                 </div>
 
             </section>
 
-            <!-- PRÓXIMOS ESTRENOS -->
+
+            <!-- =====================================
+                 PRÓXIMOS ESTRENOS
+            ====================================== -->
+
             <section class="movie-section" id="proximamente">
 
-                <div class="section-heading">
-                    <h2>Próximamente</h2>
-                    <span>Próximos estrenos</span>
+                <div class="section-header">
+
+                    <div>
+                        <h2>
+                            Próximos estrenos
+                            <span class="title-accent">.</span>
+                        </h2>
+
+                        <p>Prepárate para lo que viene</p>
+                    </div>
+
+                    <div class="carousel-controls">
+
+                        <button
+                            class="carousel-btn"
+                            data-target="upcoming-movies"
+                            data-direction="left"
+                            aria-label="Anterior"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-left"></i>
+
+                        </button>
+
+                        <button
+                            class="carousel-btn"
+                            data-target="upcoming-movies"
+                            data-direction="right"
+                            aria-label="Siguiente"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-right"></i>
+
+                        </button>
+
+                    </div>
+
                 </div>
 
-                <div id="upcoming-movies" class="movie-row">
-                    <!-- Películas dinámicas -->
+                <div class="movie-row" id="upcoming-movies">
+
+                    <!-- PRÓXIMOS ESTRENOS -->
+
                 </div>
 
             </section>
+
+
+            <!-- =====================================
+                 PELÍCULAS DE ACCIÓN
+            ====================================== -->
+
+            <section class="movie-section" id="accion">
+
+                <div class="section-header">
+
+                    <div>
+                        <h2>
+                            Acción y aventura
+                            <span class="title-accent">.</span>
+                        </h2>
+
+                        <p>Adrenalina en cada escena</p>
+                    </div>
+
+                    <div class="carousel-controls">
+
+                        <button
+                            class="carousel-btn"
+                            data-target="action-movies"
+                            data-direction="left"
+                            aria-label="Anterior"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-left"></i>
+
+                        </button>
+
+                        <button
+                            class="carousel-btn"
+                            data-target="action-movies"
+                            data-direction="right"
+                            aria-label="Siguiente"
+                            type="button">
+
+                            <i class="fa-solid fa-chevron-right"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="movie-row" id="action-movies">
+
+                    <!-- PELÍCULAS DE ACCIÓN -->
+
+                </div>
+
+            </section>
+
 
         </main>
 
-        <!-- MODAL DE INFORMACIÓN -->
-        <div id="movie-modal" class="movie-modal">
 
-            <div class="modal-content">
+        <!-- =====================================
+             MODAL DE PELÍCULAS
+        ====================================== -->
 
-                <button id="close-modal" class="close-modal">
+        <div
+            class="movie-modal"
+            id="movie-modal"
+            aria-hidden="true">
+
+            <div class="modal-overlay" id="modal-overlay"></div>
+
+            <div
+                class="modal-content"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Detalles de la película">
+
+                <!-- CERRAR -->
+                <button
+                    class="close-modal"
+                    id="close-modal"
+                    aria-label="Cerrar ventana"
+                    type="button">
+
                     <i class="fa-solid fa-xmark"></i>
+
                 </button>
 
-                <div id="modal-info">
-                    <!-- Detalles de la película -->
+                <!-- DETALLES -->
+                <div id="modal-info" class="modal-info">
+
+                    <!--
+                    JAVASCRIPT:
+                    Aquí aparecerán:
+                    - Póster
+                    - Título
+                    - Sinopsis
+                    - Puntuación
+                    - Fecha de estreno
+                    - Géneros
+                    - Tráiler
+                    -->
+
                 </div>
 
             </div>
 
         </div>
 
-        <!-- CARGA -->
-        <div id="spinner" class="spinner-container">
-            <div class="spinner"></div>
-        </div>
 
-        <!-- PAGINACIÓN -->
-        <div class="pagination-container">
+        <!-- =====================================
+             MODAL DEL TRÁILER
+        ====================================== -->
 
-            <button id="previous-page" disabled>
-                <i class="fa-solid fa-chevron-left"></i>
-                Anterior
-            </button>
+        <div
+            class="trailer-modal"
+            id="trailer-modal"
+            aria-hidden="true">
 
-            <button id="next-page">
-                Siguiente
-                <i class="fa-solid fa-chevron-right"></i>
-            </button>
+            <div class="trailer-overlay" id="trailer-overlay"></div>
 
-        </div>
+            <div class="trailer-content">
 
-        <!-- FOOTER -->
-        <footer class="footer">
+                <button
+                    class="close-trailer"
+                    id="close-trailer"
+                    aria-label="Cerrar tráiler"
+                    type="button">
 
-            <div class="logo">
-                Picture<span>Reel</span>
+                    <i class="fa-solid fa-xmark"></i>
+
+                </button>
+
+                <div id="trailer-player" class="trailer-player">
+
+                    <!-- REPRODUCTOR YOUTUBE -->
+
+                </div>
+
             </div>
 
-            <p>
-                Descubre películas, explora historias y disfruta del cine.
-            </p>
+        </div>
 
-            <small>
-                © 2026 PictureReel. Datos proporcionados por TMDb.
-            </small>
+
+        <!-- =====================================
+             LOADING GLOBAL
+        ====================================== -->
+
+        <div
+            class="spinner-container"
+            id="spinner"
+            aria-live="polite"
+            aria-label="Cargando contenido">
+
+            <div class="spinner"></div>
+
+        </div>
+
+
+        <!-- =====================================
+             PAGINACIÓN
+        ====================================== -->
+
+        <div class="pagination-container">
+
+            <button
+                id="previous-page"
+                type="button"
+                disabled>
+
+                <i class="fa-solid fa-chevron-left"></i>
+                Anterior
+
+            </button>
+
+            <span id="page-number">
+                Página 1
+            </span>
+
+            <button
+                id="next-page"
+                type="button">
+
+                Siguiente
+                <i class="fa-solid fa-chevron-right"></i>
+
+            </button>
+
+        </div>
+
+
+        <!-- =====================================
+             FOOTER
+        ====================================== -->
+
+        <footer class="footer">
+
+            <div class="footer-content">
+
+                <div class="footer-brand">
+
+                    <a href="#inicio" class="logo">
+                        Picture<span>Reel</span>
+                    </a>
+
+                    <p>
+                        Tu espacio para descubrir nuevas historias,
+                        explorar películas y disfrutar del cine.
+                    </p>
+
+                </div>
+
+
+                <div class="footer-links">
+
+                    <a href="#inicio">Inicio</a>
+                    <a href="#populares">Populares</a>
+                    <a href="#mejor-valoradas">Mejor valoradas</a>
+                    <a href="#proximamente">Próximamente</a>
+
+                </div>
+
+            </div>
+
+            <div class="footer-bottom">
+
+                <p>
+                    © 2026 PictureReel. Todos los derechos reservados.
+                </p>
+
+                <p class="tmdb-credit">
+                    Este producto utiliza la API de TMDb,
+                    pero no está respaldado ni certificado por TMDb.
+                </p>
+
+            </div>
 
         </footer>
 
+
     </div>
 
-    <script src="script.js" defer></script>
+
+    <!-- =====================================
+         JAVASCRIPT
+    ====================================== -->
+
+    <script src="js/script.js" defer></script>
 
 </body>
+
 </html>
