@@ -261,7 +261,7 @@ modal.addEventListener('close', () => {
 });
 
 async function openModal(id, type, autoplay) {
-    modal.innerHTML = '<p style="padding:30px">Cargando…</p>';
+    modal.innerHTML = '<div class="sheet-head"><span class="grip"></span></div><p class="loading">Cargando…</p>';
     modal.showModal();
     try {
         const m = await api(`${type}/${id}`, { append_to_response: 'credits,videos,watch/providers' });
@@ -269,46 +269,59 @@ async function openModal(id, type, autoplay) {
         const trailer = m.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
             || m.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')
             || m.videos.results.find(v => v.site === 'YouTube');
-        const cast = m.credits.cast.slice(0, 8).map(c => c.name).join(', ');
-        const prov = m['watch/providers'].results[REGION];
-        const platforms = prov ? [...new Set([...(prov.flatrate || []), ...(prov.rent || []), ...(prov.buy || [])].map(p => p.provider_name))] : [];
-        const duration = type === 'movie' ? (m.runtime ? `${m.runtime} min` : '') : `${m.number_of_seasons} temporada${m.number_of_seasons === 1 ? '' : 's'}`;
         const bg = m.backdrop_path ? `${IMAGE_URL}w780${m.backdrop_path}` : '';
+        const date = m.release_date || m.first_air_date || '';
+        const upcoming = date && new Date(date) > new Date();
+        const duration = type === 'movie' ? (m.runtime ? `${m.runtime} min` : '') : `${m.number_of_seasons} temporada${m.number_of_seasons === 1 ? '' : 's'}`;
+        const pills = [
+            m.vote_count > 0 ? `<span class="pill rating">★ ${m.vote_average.toFixed(1)}</span>` : '<span class="pill">Sin valoraciones</span>',
+            yearOf(m) ? `<span class="pill">${yearOf(m)}</span>` : '',
+            duration ? `<span class="pill">${duration}</span>` : '',
+            upcoming ? '<span class="pill soon">Próximo estreno</span>' : ''
+        ].join('');
+        const cast = m.credits.cast.slice(0, 12).map(c => `
+            <li><div class="avatar">${c.profile_path ? `<img loading="lazy" src="${IMAGE_URL}w185${c.profile_path}" alt="">` : '<i class="fa-solid fa-user"></i>'}</div>
+            <b>${escapeHTML(c.name)}</b><small>${escapeHTML(c.character || '')}</small></li>`).join('');
+        const prov = m['watch/providers'].results[REGION];
+        const all = prov ? [...(prov.flatrate || []), ...(prov.rent || []), ...(prov.buy || [])] : [];
+        const unique = [...new Map(all.map(p => [p.provider_id, p])).values()];
+        const logos = unique.map(p => `<img src="${IMAGE_URL}w92${p.logo_path}" alt="${escapeHTML(p.provider_name)}" title="${escapeHTML(p.provider_name)}">`).join('');
 
         modal.innerHTML = `
-            <button class="close-modal" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
-            <div class="modal-backdrop" id="mb" style="background-image:url('${bg}')"></div>
+            <div class="sheet-head"><span class="grip"></span><button class="close-modal" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="modal-backdrop" id="mb" style="background-image:url('${bg}')">
+                ${trailer ? '<button class="big-play" id="m-big" aria-label="Reproducir tráiler"><i class="fa-solid fa-play"></i></button>' : ''}
+            </div>
             <div class="modal-details">
                 <h2>${title}</h2>
-                <div class="meta"><span class="rating">★ ${m.vote_average.toFixed(1)}</span><span>${yearOf(m)}</span>${duration ? `<span>${duration}</span>` : ''}<span>${m.genres.map(g => escapeHTML(g.name)).join(', ')}</span></div>
+                <div class="pills">${pills}</div>
+                <div class="genres">${m.genres.map(g => `<span>${escapeHTML(g.name)}</span>`).join('')}</div>
                 <div class="mbtns">
                     ${trailer ? '<button class="hbtn play" id="m-play"><i class="fa-solid fa-play"></i> Ver tráiler</button>' : ''}
                     <button class="hbtn info" id="m-list"></button>
                 </div>
-                <p>${escapeHTML(m.overview) || 'Sin sinopsis disponible en español.'}</p>
-                ${cast ? `<h3>Reparto</h3><p>${escapeHTML(cast)}</p>` : ''}
+                <h3>Sinopsis</h3>
+                <p class="overview">${escapeHTML(m.overview) || 'Sin sinopsis disponible en español.'}</p>
+                ${cast ? `<h3>Reparto</h3><ul class="cast">${cast}</ul>` : ''}
                 <h3>Dónde verla en ${REGION}</h3>
-                <p>${platforms.length ? escapeHTML(platforms.join(', ')) : 'Sin datos de plataformas para tu región.'}</p>
+                ${logos ? `<div class="logos">${logos}</div>` : '<p class="muted">Sin datos de plataformas para tu región.</p>'}
             </div>`;
 
         modal.querySelector('.close-modal').onclick = () => modal.close();
         const play = () => {
             const box = $('#mb');
             box.classList.add('playing');
-            box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&rel=0" title="Tráiler de ${title}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+            box.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailer.key)}?autoplay=1&playsinline=1&rel=0" title="Tráiler de ${title}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+            box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         };
-        if (trailer) $('#m-play').onclick = play;
+        if (trailer) { $('#m-play').onclick = play; $('#m-big').onclick = play; }
         const btn = $('#m-list');
         const label = () => { btn.innerHTML = inList(m.id, type) ? '<i class="fa-solid fa-check"></i> En mi lista' : '<i class="fa-solid fa-plus"></i> Mi lista'; };
         label();
-        btn.onclick = () => {
-            toggleList(m, type);
-            label();
-            listChanged = true;
-        };
+        btn.onclick = () => { toggleList(m, type); label(); listChanged = true; };
         if (autoplay && trailer) play();
     } catch (e) {
-        modal.innerHTML = `<p style="padding:30px">${escapeHTML(e.message)}</p>`;
+        modal.innerHTML = `<div class="sheet-head"><button class="close-modal" aria-label="Cerrar" onclick="this.closest('dialog').close()"><i class="fa-solid fa-xmark"></i></button></div><p class="loading">${escapeHTML(e.message)}</p>`;
     }
 }
 
