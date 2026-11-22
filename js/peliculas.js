@@ -330,3 +330,15 @@ async function openModal(id, type, autoplay) {
 // ========================================
 renderChips();
 load();
+
+// ========================================
+// BLOQUEO DE SELECCIÓN Y ZOOM
+// ========================================
+['contextmenu', 'selectstart', 'copy', 'dragstart'].forEach(ev =>
+    document.addEventListener(ev, e => { if (!e.target.closest?.('input')) e.preventDefault(); })
+);
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && ['+', '-', '=', '0'].includes(e.key)) e.preventDefault();
+});
