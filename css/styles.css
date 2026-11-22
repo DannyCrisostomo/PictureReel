@@ -48,7 +48,10 @@ img{display:block;max-width:100%}
 
 /* Secciones y carruseles */
 #content{position:relative;z-index:5;min-height:40vh}
-body.no-hero #content{padding-top:110px}
+body.no-hero .navbar{background:var(--bg);box-shadow:0 5px 25px rgba(0,0,0,.4)}
+body.no-hero .chips{padding-top:88px}
+body.no-hero #content{padding-top:6px}
+.chips[hidden]+#content{padding-top:96px}
 .movie-section{padding:12px 5%;margin-bottom:10px}
 .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .section-header h2{font-size:21px;font-weight:800;letter-spacing:-.4px}
@@ -150,7 +153,8 @@ dialog[open]{animation:sheetIn .3s ease}
   .tabbar button i{font-size:18px}
   .tabbar button.active{color:#fff}
   .tabbar button.active i{color:var(--primary)}
-  body.no-hero #content{padding-top:80px}
+  body.no-hero .chips{padding-top:76px}
+  .chips[hidden]+#content{padding-top:80px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation-duration:.01ms!important}}
 
