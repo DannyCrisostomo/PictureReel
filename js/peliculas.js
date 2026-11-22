@@ -3,7 +3,7 @@
 // CONFIGURACIÓN TMDB
 // ========================================
 
-const apiKey = 'REEMPLAZA_CON_TU_NUEVA_API_KEY';
+const apiKey = '011e76f650e4be279c8687bb0ad90c27';
 
 const API_URL = 'https://api.themoviedb.org/3';
 const IMAGE_URL = 'https://image.tmdb.org/t/p/';
