@@ -1,137 +1,355 @@
 
+// ========================================
+// CONFIGURACIÓN TMDB
+// ========================================
 
-// Clave de API para acceder a la API de The Movie Database (TMDb)
-const apiKey = '011e76f650e4be279c8687bb0ad90c27';
+const apiKey = 'REEMPLAZA_CON_TU_NUEVA_API_KEY';
 
-// Número de la página inicial
+const API_URL = 'https://api.themoviedb.org/3';
+const IMAGE_URL = 'https://image.tmdb.org/t/p/';
+
 let currentPage = 1;
+let currentSearch = '';
+let isLoading = false;
+let requestController = null;
 
-function fetchMovies(page, searchTerm = '') {
-    // Construir la URL de la API según la página y el término de búsqueda
-    let apiURL = `https://api.themoviedb.org/3/discover/movie?api_key=${apiKey}&page=${page}`;
-
-    // Agregar el término de búsqueda si se proporciona
-    if (searchTerm) {
-        apiURL = `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&page=${page}&query=${searchTerm}`;
-    }
-
-    // Realizar la solicitud a la API
-    fetch(apiURL)
-        .then(response => response.json())
-        .then(data => {
-            // Obtener la lista de películas desde la respuesta de la API
-            const movies = data.results.slice(0, 1); //cantidad de datos que se va recuperar
-
-            // Crear una variable para almacenar todo el contenido
-            let content = '';
-
-            // Iterar sobre cada película y construir el contenido
-            movies.forEach(movie => {
-                // Obtener el video de la película
-                fetch(`https://api.themoviedb.org/3/movie/${movie.id}/videos?api_key=${apiKey}`)
-                    .then(response => response.json())
-                    .then(videoData => {
-                        // Tomar el primer video (puedes ajustar según tus necesidades)
-                        const videoKey = videoData.results[0].key;
-
-                        // Construir el contenido del div con la información de la película y el video
-                        content += `
-<div class="background">
-    <div class="background-fondo" style="background-image: linear-gradient(180deg, rgba(8, 15, 40, 0) 0, #080f28), linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),url('https://image.tmdb.org/t/p/w500${movie.backdrop_path}');">
-        <div class="movie">
-            <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" alt="Descripción de la imagen">
-            <div class="datos-peliculas">
-                <h1>${movie.original_title}</h1>
-                <p>Puntuación: ${movie.vote_average}</p>
-                <p>Popularidad: ${movie.popularity}</p>
-                <p>Fecha de lanzamiento: ${movie.release_date}</p>
-                <a class="btn" href="https://image.tmdb.org/t/p/w500${movie.poster_path}">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="currentColor" class="icon icon-play">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
-                    </svg>Ver ahora
-                </a>
-                <h3>'${movie.original_title}' Online en Picture<span>Reel</span></h3>
-                <p>${movie.overview}</p>
-            </div>
-        </div>
-        <div class="youtube">
-            <iframe width="560" height="315" src="https://www.youtube.com/embed/${videoKey}" frameborder="0" allowfullscreen></iframe>
-        </div>
-    </div>
-</div>
-
-                        `;
-
-                        // Asignar el contenido al contenedor HTML
-                        document.getElementById('movie-info').innerHTML = content;
-                    })
-                    .catch(error => {
-                        // Manejar errores al obtener videos desde la API
-                        console.error('Error al obtener videos:', error);
-                    });
-            });
-
-            // Mostrar la información completa de la respuesta de la API en la consola
-            console.log(data);
-        })
-        .catch(error => {
-            // Manejar errores de la solicitud a la API
-            console.error('Ocurrió un error:', error);
-        });
-}
-
-
-// Llamada inicial para cargar la primera página de películas
-fetchMovies(currentPage);
-
-// Eventos de paginación y búsqueda
-
-// Evento para el botón "Página anterior"
-document.getElementById('previous-page').addEventListener('click', () => {
-    if (currentPage > 1) {
-        // Decrementar el número de página y cargar las películas de la nueva página
-        currentPage--;
-        fetchMovies(currentPage);
-    }
-});
-
-// Evento para el botón "Página siguiente"
-document.getElementById('next-page').addEventListener('click', () => {
-    // Incrementar el número de página y cargar las películas de la nueva página
-    currentPage++;
-    fetchMovies(currentPage);
-});
-
-// Evento para el botón de búsqueda
-document.getElementById('search-button').addEventListener('click', () => {
-    // Obtener el término de búsqueda del campo de entrada
-    const searchTerm = document.getElementById('search-input').value;
-
-    // Restablecer a la primera página al realizar una nueva búsqueda
-    currentPage = 1;
-
-    // Realizar la búsqueda de películas con el término proporcionado
-    fetchMovies(currentPage, searchTerm);
-});
-
-//spinner de conexion a internet
+const movieInfo = document.getElementById('movie-info');
+const searchInput = document.getElementById('search-input');
+const searchButton = document.getElementById('search-button');
+const previousButton = document.getElementById('previous-page');
+const nextButton = document.getElementById('next-page');
 const spinner = document.getElementById('spinner');
 
+// ========================================
+// UTILIDADES
+// ========================================
+
+function escapeHTML(value = '') {
+    return String(value).replace(/[&<>"']/g, character => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    })[character]);
+}
+
 function showSpinner() {
-  spinner.style.display = 'block';
+    if (spinner) spinner.style.display = 'block';
 }
 
 function hideSpinner() {
-  spinner.style.display = 'none';
+    if (spinner) spinner.style.display = 'none';
 }
 
-// Llamar a las funciones al cargar la página para manejar el estado inicial de la conexión
-window.addEventListener('load', () => {
+function updatePagination(totalPages) {
+    previousButton.disabled = currentPage <= 1;
+    nextButton.disabled = currentPage >= totalPages;
+}
+
+function showMessage(message) {
+    movieInfo.innerHTML = `
+        <div class="message">
+            ${escapeHTML(message)}
+        </div>
+    `;
+}
+
+// ========================================
+// OBTENER PELÍCULAS
+// ========================================
+
+async function fetchMovies(page, searchTerm = '') {
+
     if (!navigator.onLine) {
-        showSpinner();
+        showMessage('No tienes conexión a Internet.');
+        return;
+    }
+
+    if (isLoading) {
+        requestController?.abort();
+    }
+
+    requestController = new AbortController();
+    const signal = requestController.signal;
+
+    isLoading = true;
+    showSpinner();
+
+    movieInfo.innerHTML = '';
+
+    try {
+
+        const endpoint = searchTerm
+            ? `${API_URL}/search/movie`
+            : `${API_URL}/discover/movie`;
+
+        const params = new URLSearchParams({
+            api_key: apiKey,
+            language: 'es-ES',
+            page: page.toString(),
+            include_adult: 'false'
+        });
+
+        if (searchTerm) {
+            params.set('query', searchTerm);
+        } else {
+            params.set('sort_by', 'popularity.desc');
+        }
+
+        const response = await fetch(
+            `${endpoint}?${params.toString()}`,
+            { signal }
+        );
+
+        if (!response.ok) {
+            throw new Error('No se pudieron obtener las películas.');
+        }
+
+        const data = await response.json();
+
+        if (!data.results || data.results.length === 0) {
+            showMessage('No se encontraron películas.');
+            updatePagination(data.total_pages || 1);
+            return;
+        }
+
+        currentPage = page;
+        updatePagination(Math.min(data.total_pages || 1, 500));
+
+        // Seleccionar la película principal
+        const movie = data.results[0];
+
+        // Obtener el tráiler
+        const videoResponse = await fetch(
+            `${API_URL}/movie/${movie.id}/videos?${new URLSearchParams({
+                api_key: apiKey,
+                language: 'es-ES'
+            })}`,
+            { signal }
+        );
+
+        if (!videoResponse.ok) {
+            throw new Error('No se pudo cargar el tráiler.');
+        }
+
+        const videoData = await videoResponse.json();
+
+        // Priorizar tráiler oficial de YouTube
+        const trailer =
+            videoData.results.find(video =>
+                video.site === 'YouTube' &&
+                video.type === 'Trailer' &&
+                video.official
+            ) ||
+            videoData.results.find(video =>
+                video.site === 'YouTube' &&
+                video.type === 'Trailer'
+            ) ||
+            videoData.results.find(video =>
+                video.site === 'YouTube'
+            );
+
+        renderMovie(movie, trailer);
+
+    } catch (error) {
+
+        if (error.name === 'AbortError') return;
+
+        console.error('Error:', error);
+
+        showMessage(
+            'Ocurrió un error al cargar la película. Inténtalo nuevamente.'
+        );
+
+    } finally {
+
+        isLoading = false;
+        hideSpinner();
+    }
+}
+
+// ========================================
+// MOSTRAR PELÍCULA
+// ========================================
+
+function renderMovie(movie, trailer) {
+
+    const title = escapeHTML(movie.title || 'Sin título');
+    const overview = escapeHTML(
+        movie.overview || 'No hay descripción disponible para esta película.'
+    );
+
+    const releaseDate = escapeHTML(
+        movie.release_date || 'No disponible'
+    );
+
+    const rating = Number(movie.vote_average || 0).toFixed(1);
+
+    const popularity = Math.round(movie.popularity || 0);
+
+    const poster = movie.poster_path
+        ? `${IMAGE_URL}w500${movie.poster_path}`
+        : 'https://placehold.co/500x750/101a35/ffffff?text=Sin+poster';
+
+    const backdrop = movie.backdrop_path
+        ? `${IMAGE_URL}original${movie.backdrop_path}`
+        : poster;
+
+    const trailerKey = trailer?.key || '';
+
+    const trailerHTML = trailerKey
+        ? `
+            <div class="youtube">
+                <iframe
+                    src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(trailerKey)}"
+                    title="Tráiler de ${title}"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen>
+                </iframe>
+            </div>
+        `
+        : `
+            <div class="message">
+                Tráiler no disponible para esta película.
+            </div>
+        `;
+
+    const watchURL = trailerKey
+        ? `https://www.youtube.com/watch?v=${encodeURIComponent(trailerKey)}`
+        : `https://www.themoviedb.org/movie/${movie.id}`;
+
+    movieInfo.innerHTML = `
+        <section class="background">
+
+            <div class="background-fondo"
+                style="background-image: url('${backdrop}')">
+
+                <div class="movie">
+
+                    <img
+                        src="${poster}"
+                        alt="${title}"
+                        loading="eager"
+                    >
+
+                    <div class="datos-peliculas">
+
+                        <h1>${title}</h1>
+
+                        <div class="meta">
+                            <span>⭐ ${rating}/10</span>
+                            <span>🔥 ${popularity}</span>
+                            <span>📅 ${releaseDate}</span>
+                        </div>
+
+                        <a
+                            class="btn"
+                            href="${watchURL}"
+                            target="_blank"
+                            rel="noopener noreferrer">
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                width="23"
+                                height="23"
+                                viewBox="0 0 20 20"
+                                fill="currentColor">
+
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                                    clip-rule="evenodd">
+                                </path>
+                            </svg>
+
+                            Ver tráiler
+                        </a>
+
+                        <h3>
+                            '${title}' Online en Picture<span>Reel</span>
+                        </h3>
+
+                        <p>${overview}</p>
+
+                    </div>
+
+                </div>
+
+                ${trailerHTML}
+
+            </div>
+
+        </section>
+    `;
+
+}
+
+// ========================================
+// BÚSQUEDA
+// ========================================
+
+function searchMovies() {
+
+    const searchTerm = searchInput.value.trim();
+
+    currentSearch = searchTerm;
+    currentPage = 1;
+
+    fetchMovies(currentPage, currentSearch);
+}
+
+searchButton.addEventListener('click', searchMovies);
+
+searchInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+        searchMovies();
     }
 });
 
-// Llamar a las funciones cuando cambie el estado de la conexión
-window.addEventListener('online', hideSpinner);
-window.addEventListener('offline', showSpinner);
+// ========================================
+// PAGINACIÓN
+// ========================================
+
+previousButton.addEventListener('click', () => {
+
+    if (currentPage > 1 && !isLoading) {
+        currentPage--;
+        fetchMovies(currentPage, currentSearch);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+});
+
+nextButton.addEventListener('click', () => {
+
+    if (!isLoading) {
+        currentPage++;
+        fetchMovies(currentPage, currentSearch);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+});
+
+// ========================================
+// CONEXIÓN A INTERNET
+// ========================================
+
+window.addEventListener('online', () => {
+    hideSpinner();
+
+    if (!movieInfo.innerHTML.trim()) {
+        fetchMovies(currentPage, currentSearch);
+    }
+});
+
+window.addEventListener('offline', () => {
+    showSpinner();
+    showMessage('Sin conexión a Internet.');
+});
+
+// ========================================
+// INICIO
+// ========================================
+
+fetchMovies(currentPage);
