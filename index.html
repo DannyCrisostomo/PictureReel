@@ -1,47 +1,184 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Películas de TMDb con Paginación y Búsqueda</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="icon" href="img/PictureReel.png" type="image/png">
+    <meta name="theme-color" content="#080808">
+
+    <title>PictureReel | Tu mundo de películas</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
+
 <body>
+
     <div class="container">
-        <header>
+
+        <!-- NAVEGACIÓN -->
+        <header class="navbar">
+
             <div class="logo">
                 <a href="#">
-                    <p>Picture<span>Reel</span></p>
+                    Picture<span>Reel</span>
                 </a>
             </div>
-            <div class="buscador">
-                <div class="buscar">
-                    <div class="icono">
-                        <svg style="color: var(---primario); width: 20px;" aria-hidden="true"
-                            class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="../www.w3.org/2000/svg.html">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                    <input type="search" name="search" id="search-input" autocomplete="off"
-                        placeholder="Buscar anime..." required="">
-                </div>
-                <button id="search-button">Buscar</button>
-            </div>
-        </header>
-        <div id="movie-info">
-            <div class="spiner">
-                <div id="spinner" class="spinner"></div>
-            </div>
-        </div>
-        <div class="pagination-container">
-            <button id="previous-page">Anterior</button>
-            <button id="next-page">Siguiente</button>
-        </div>
-    </div>
-    <script src="js/peliculas.js"></script>
-</body>
 
+            <nav class="nav-links">
+                <a href="#inicio" class="active">Inicio</a>
+                <a href="#populares">Populares</a>
+                <a href="#mejor-valoradas">Mejor valoradas</a>
+                <a href="#proximamente">Próximamente</a>
+            </nav>
+
+            <div class="nav-actions">
+
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input
+                        type="search"
+                        id="search-input"
+                        placeholder="Buscar películas..."
+                    >
+                    <button id="search-button" aria-label="Buscar">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <button class="mobile-menu" aria-label="Abrir menú">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+
+            </div>
+
+        </header>
+
+        <!-- CONTENIDO -->
+        <main>
+
+            <!-- PELÍCULA DESTACADA -->
+            <section class="hero" id="inicio">
+
+                <div id="movie-info">
+                    <!-- JavaScript cargará la película destacada -->
+                </div>
+
+            </section>
+
+            <!-- BUSCADOR RESULTADOS -->
+            <section class="search-results" id="search-results">
+                <h2>Resultados de búsqueda</h2>
+
+                <div id="search-movies" class="movie-grid">
+                    <!-- Resultados dinámicos -->
+                </div>
+            </section>
+
+            <!-- PELÍCULAS POPULARES -->
+            <section class="movie-section" id="populares">
+
+                <div class="section-heading">
+                    <h2>Películas populares</h2>
+                    <span>Descubre lo más visto</span>
+                </div>
+
+                <div id="popular-movies" class="movie-row">
+                    <!-- Películas dinámicas -->
+                </div>
+
+            </section>
+
+            <!-- MEJOR VALORADAS -->
+            <section class="movie-section" id="mejor-valoradas">
+
+                <div class="section-heading">
+                    <h2>Las mejor valoradas</h2>
+                    <span>Historias que debes ver</span>
+                </div>
+
+                <div id="top-rated-movies" class="movie-row">
+                    <!-- Películas dinámicas -->
+                </div>
+
+            </section>
+
+            <!-- PRÓXIMOS ESTRENOS -->
+            <section class="movie-section" id="proximamente">
+
+                <div class="section-heading">
+                    <h2>Próximamente</h2>
+                    <span>Próximos estrenos</span>
+                </div>
+
+                <div id="upcoming-movies" class="movie-row">
+                    <!-- Películas dinámicas -->
+                </div>
+
+            </section>
+
+        </main>
+
+        <!-- MODAL DE INFORMACIÓN -->
+        <div id="movie-modal" class="movie-modal">
+
+            <div class="modal-content">
+
+                <button id="close-modal" class="close-modal">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div id="modal-info">
+                    <!-- Detalles de la película -->
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CARGA -->
+        <div id="spinner" class="spinner-container">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        <div class="pagination-container">
+
+            <button id="previous-page" disabled>
+                <i class="fa-solid fa-chevron-left"></i>
+                Anterior
+            </button>
+
+            <button id="next-page">
+                Siguiente
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer class="footer">
+
+            <div class="logo">
+                Picture<span>Reel</span>
+            </div>
+
+            <p>
+                Descubre películas, explora historias y disfruta del cine.
+            </p>
+
+            <small>
+                © 2026 PictureReel. Datos proporcionados por TMDb.
+            </small>
+
+        </footer>
+
+    </div>
+
+    <script src="script.js" defer></script>
+
+</body>
 </html>
