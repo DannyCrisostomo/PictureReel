@@ -202,6 +202,7 @@ function markNav() {
 function leaveLive() {
     if ($('#tvView').hidden) return;
     $('#tvView').hidden = true;
+    $('#content').hidden = false;
     window.TV?.leave();
 }
 
@@ -219,6 +220,7 @@ function setView(view) {
         $('#chips').hidden = true;
         $('#more').hidden = true;
         $('#content').innerHTML = '';
+        $('#content').hidden = true;
         document.body.classList.add('no-hero');
         $('#tvView').hidden = false;
         window.TV?.open();
