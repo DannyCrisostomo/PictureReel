@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#080808">
-    <meta name="description" content="PictureReel: descubre películas y series, tendencias, estrenos y tráilers.">
-    <title>PictureReel - Películas y Series</title>
+    <meta name="description" content="PictureReel: descubre películas y series, tendencias, estrenos, tráilers y TV en vivo.">
+    <title>PictureReel - Películas, Series y TV en vivo</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/tv.css">
 </head>
 <body>
 
@@ -21,6 +22,7 @@
             <button data-view="all" class="active">Inicio</button>
             <button data-view="movie">Películas</button>
             <button data-view="tv">Series</button>
+            <button data-view="live">TV en vivo</button>
             <button data-view="list">Mi lista</button>
         </nav>
     </div>
@@ -37,9 +39,92 @@
 <main id="content"></main>
 <button class="load-more" id="more" hidden type="button">Cargar más</button>
 
+<!-- ================= TV EN VIVO ================= -->
+<section id="tvView" hidden aria-label="TV en vivo">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+        <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></symbol>
+        <symbol id="i-prev" viewBox="0 0 24 24"><path d="M6 6h2v12H6zM20 6v12L9.5 12z"/></symbol>
+        <symbol id="i-next" viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM4 6v12l10.5-6z"/></symbol>
+        <symbol id="i-vol" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></symbol>
+        <symbol id="i-mute" viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.8 8.8 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></symbol>
+        <symbol id="i-pip" viewBox="0 0 24 24"><path d="M19 11h-8v6h8v-6zm4 8V4.98C23 3.88 22.1 3 21 3H3c-1.1 0-2 .88-2 1.98V19c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2zm-2 .02H3V4.97h18v14.05z"/></symbol>
+        <symbol id="i-fs" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></symbol>
+        <symbol id="i-fsx" viewBox="0 0 24 24"><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/></symbol>
+    </svg>
+
+    <h1>TV en vivo</h1>
+    <p class="tmut">Canales públicos de iptv-org</p>
+
+    <div class="player">
+        <div class="screen" id="tvScreen">
+            <video id="video" playsinline></video>
+
+            <div class="ov" id="ov">
+                <div class="ovtop">
+                    <b id="ovName">Elige un canal</b>
+                    <button class="live" id="liveBtn" type="button" hidden>● EN VIVO</button>
+                </div>
+                <div class="ctl">
+                    <input class="seek" id="seek" type="range" min="0" max="1000" value="0" aria-label="Progreso" hidden>
+                    <div class="row">
+                        <button class="ib" id="bPrev" type="button" aria-label="Canal anterior"><svg class="i"><use href="#i-prev"/></svg></button>
+                        <button class="ib big" id="bPlay" type="button" aria-label="Reproducir"><svg class="i"><use href="#i-play"/></svg></button>
+                        <button class="ib" id="bNext" type="button" aria-label="Canal siguiente"><svg class="i"><use href="#i-next"/></svg></button>
+                        <span class="grow"></span>
+                        <button class="ib" id="bMute" type="button" aria-label="Silenciar"><svg class="i"><use href="#i-vol"/></svg></button>
+                        <input class="vol" id="vol" type="range" min="0" max="1" step="0.05" value="1" aria-label="Volumen">
+                        <button class="q" id="bQual" type="button" aria-label="Calidad" hidden>Auto</button>
+                        <button class="ib" id="bPip" type="button" aria-label="Imagen en imagen" hidden><svg class="i"><use href="#i-pip"/></svg></button>
+                        <button class="ib" id="bFull" type="button" aria-label="Pantalla completa"><svg class="i"><use href="#i-fs"/></svg></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mid"><div class="tspin" id="spin" hidden></div></div>
+            <div class="tmenu" id="qMenu" hidden></div>
+            <div class="terr" id="err" hidden>
+                <p id="errTxt"></p>
+                <div>
+                    <button class="tpill fill" id="errRetry" type="button">Reintentar</button>
+                    <button class="tpill" id="errNext" type="button">Siguiente canal</button>
+                </div>
+            </div>
+        </div>
+        <p id="tvMsg" role="status"></p>
+    </div>
+
+    <div class="tbar">
+        <input id="tvQ" type="search" placeholder="Buscar canal" aria-label="Buscar canal">
+        <select id="country" aria-label="País">
+            <option value="pe">Perú</option><option value="mx">México</option><option value="co">Colombia</option>
+            <option value="ar">Argentina</option><option value="cl">Chile</option><option value="ec">Ecuador</option>
+            <option value="bo">Bolivia</option><option value="es">España</option><option value="us">EE. UU.</option>
+        </select>
+    </div>
+
+    <div class="seg" id="seg">
+        <button class="on" data-tab="ok" type="button">✔ Con señal <b id="nOk">0</b></button>
+        <button data-tab="bad" type="button">✖ Sin señal <b id="nBad">0</b></button>
+    </div>
+    <div class="prog">
+        <span id="prog"></span>
+        <button id="recheck" type="button">↻ Volver a verificar</button>
+    </div>
+
+    <div class="tchips" id="tvChips"></div>
+    <div class="grid" id="tvGrid"></div>
+
+    <p class="tnote">
+        Las listas vienen de <b>iptv-org/iptv</b>. Antes de mostrarlos, la página comprueba cada canal:
+        <b>Con señal</b> respondieron desde tu navegador; <b>Sin señal</b> están caídos, bloqueados por país
+        o no permiten reproducirse desde una página web.
+    </p>
+</section>
+
 <footer class="footer">
     <a href="#" class="logo" data-view="all">Picture<span>Reel</span></a>
-    <p>© 2026 PictureReel. Proyecto de demostración: no reproduce contenido, solo tráilers.</p>
+    <p>© 2026 PictureReel. Proyecto de demostración: en películas y series solo hay tráilers; la TV en vivo usa listas públicas de terceros.</p>
     <p>Este producto utiliza la API de TMDB, pero no está respaldado ni certificado por TMDB.</p>
 </footer>
 
@@ -47,12 +132,18 @@
     <button data-view="all" class="active"><i class="fa-solid fa-house"></i>Inicio</button>
     <button data-view="movie"><i class="fa-solid fa-film"></i>Películas</button>
     <button data-view="tv"><i class="fa-solid fa-tv"></i>Series</button>
+    <button data-view="live"><i class="fa-solid fa-tower-broadcast"></i>En vivo</button>
     <button data-view="list"><i class="fa-solid fa-bookmark"></i>Mi lista</button>
 </nav>
 
 <dialog id="modal" aria-label="Detalles"></dialog>
 <div class="spinner-container" id="spinner" aria-live="polite" aria-label="Cargando"><div class="spinner"></div></div>
 
+<!-- hls.js (con respaldo si el primer servidor falla) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.8/hls.min.js"></script>
+<script>window.Hls || document.write('<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"><\/script>');</script>
+
 <script src="js/peliculas.js" defer></script>
+<script src="js/tv.js" defer></script>
 </body>
 </html>
