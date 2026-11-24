@@ -147,10 +147,11 @@
       if (!res.ok) throw new Error(res.status);
       const secure = location.protocol === 'https:';
       const seen = new Set();
+      const cname = ($('#country').querySelector(`option[value="${cc}"]`) || {}).textContent || '';
       channels = parseM3U(await res.text()).filter((c) =>
         !c.headers &&
         (!secure || c.url.startsWith('https:')) &&
-        !seen.has(c.url) && seen.add(c.url));
+        !seen.has(c.url) && seen.add(c.url)).map((c) => ({ ...c, country: cname }));
       group = ''; favOnly = false;
       draw();
       verify(channels);
@@ -241,14 +242,18 @@
   }
 
   // ======================================================================
-  // 6) REPRODUCTOR
+  // 6) REPRODUCTOR (diseño tipo TV: número, logo, EN VIVO, reloj, panel de canales)
   // ======================================================================
-  const ov = $('#ov'), box = $('#tvScreen'), menu = $('#qMenu');
+  const ov = $('#ov'), box = $('#tvScreen'), menu = $('#qMenu'), panel = $('#chPanel');
+  const sel = $('#country');
   let hls = null;
   let isLive = true;
+  let seeking = false;
   let levels = [];
   let qPref = store.get('tvQ') || 'auto';
   const msg = (t) => { $('#tvMsg').textContent = t; };
+  const playable = () => shown.filter((c) => stateOf(c.url) !== 'bad');
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
 
   function pickLevel(lv, pref) {
     if (pref === 'auto') return -1;
@@ -259,21 +264,22 @@
     return withH.sort((a, b) => a.h - b.h || a.br - b.br)[0].i;
   }
 
+  // --- controles: se ocultan solos ---
   let hideT;
   function showCtl() {
     ov.classList.remove('hide');
     clearTimeout(hideT);
-    if (!video.paused && menu.hidden && $('#err').hidden) hideT = setTimeout(() => ov.classList.add('hide'), 3500);
+    if (!video.paused && menu.hidden && panel.hidden && $('#err').hidden) hideT = setTimeout(() => ov.classList.add('hide'), 3500);
   }
   box.addEventListener('click', (e) => {
-    if (e.target.closest('button,input,.tmenu')) { showCtl(); return; }
+    if (e.target.closest('button,input,.tmenu,.panel')) { showCtl(); return; }
     if (!menu.hidden) { menu.hidden = true; return; }
+    if (!panel.hidden) { panel.hidden = true; return; }
     if (ov.classList.contains('hide')) showCtl(); else ov.classList.add('hide');
   });
   box.addEventListener('mousemove', showCtl);
 
-  const spin = (on) => { $('#spin').hidden = !on; };
-
+  const spin = (on) => { $('#spin').hidden = !on; box.classList.toggle('busy', on); };
   function showError(t) {
     $('#errTxt').textContent = t;
     $('#err').hidden = false;
@@ -282,14 +288,71 @@
   }
   const hideError = () => { $('#err').hidden = true; };
 
+  // --- encabezado del canal: número, logo, nombre, país ---
+  const numOf = (c) => { const i = playable().findIndex((x) => x.url === c.url); return i >= 0 ? i + 1 : '–'; };
+  function setBrand(c) {
+    $('#ovName').textContent = c.name;
+    $('#chNum').textContent = numOf(c);
+    $('#ovCountry').textContent = c.country || '';
+    const lg = $('#chLogo');
+    const initial = c.name.charAt(0).toUpperCase();
+    lg.textContent = '';
+    if (c.logo && c.logo.startsWith('https')) {
+      const im = new Image();
+      im.alt = '';
+      im.onerror = () => { lg.textContent = initial; };
+      im.src = c.logo;
+      lg.appendChild(im);
+    } else lg.textContent = initial;
+    syncFav();
+  }
+
+  // --- favoritos ---
+  function toggleFav(c) {
+    const i = favs.findIndex((f) => f.url === c.url);
+    if (i >= 0) favs.splice(i, 1);
+    else favs.push({ name: c.name, logo: c.logo, group: c.group, country: c.country, url: c.url });
+    store.set('tvFavs', favs);
+  }
+  function syncFav() {
+    const on = !!current && isFav(current.url);
+    const b = $('#bFav');
+    b.setAttribute('aria-pressed', on);
+    b.querySelector('use').setAttribute('href', on ? '#i-heartf' : '#i-heart');
+    b.querySelector('span').textContent = on ? 'Guardado' : 'Favorito';
+  }
+  $('#bFav').addEventListener('click', () => { if (current) { toggleFav(current); syncFav(); draw(); } });
+
+  // --- cambiar de canal ---
   function zap(d) {
-    const pool = shown.filter((c) => stateOf(c.url) !== 'bad');
+    const pool = playable();
     if (!pool.length) { msg('No hay más canales con señal en esta lista.'); return; }
     const i = pool.findIndex((c) => current && c.url === current.url);
     const n = i < 0 ? (d > 0 ? 0 : pool.length - 1) : (i + d + pool.length) % pool.length;
     play(pool[n]);
   }
 
+  // --- panel lateral de canales ---
+  function renderPanel() {
+    panel.innerHTML = '<h4>Canales</h4>' + playable().map((c, i) =>
+      `<button class="prow ${current && c.url === current.url ? 'on' : ''}" data-url="${esc(c.url)}"><em>${i + 1}</em><span>${esc(c.name)}</span></button>`).join('');
+    panel.querySelector('.on')?.scrollIntoView({ block: 'center' });
+  }
+  panel.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-url]');
+    if (!b) return;
+    const c = [...channels, ...favs].find((x) => x.url === b.dataset.url);
+    if (c) play(c);
+  });
+  $('#bList').addEventListener('click', async () => {
+    const wasFs = !!fsEl();
+    if (!wasFs && box.requestFullscreen) { try { await box.requestFullscreen(); } catch {} }
+    panel.hidden = wasFs ? !panel.hidden : false;
+    if (!panel.hidden) renderPanel();
+    showCtl();
+  });
+
+  // --- reproducir ---
   function stop() {
     clearTimeout(stallT);
     if (hls) { hls.destroy(); hls = null; }
@@ -317,18 +380,19 @@
 
   function play(c) {
     current = c;
-    store.set('tvLast', { name: c.name, logo: c.logo, group: c.group, url: c.url });
-    $('#ovName').textContent = c.name;
+    store.set('tvLast', { name: c.name, logo: c.logo, group: c.group, country: c.country, url: c.url });
+    setBrand(c);
     msg('Conectando…');
     hideError();
     spin(true);
     stop();
     isLive = true;
-    $('#bQual').hidden = true;
-    $('#liveBtn').hidden = false;
-    $('#seek').hidden = true;
+    levels = [];
+    buildMenu();
     setSession(c);
+    updateLive();
     draw();
+    if (!panel.hidden) renderPanel();
 
     const isHls = /\.m3u8(\?|$)/i.test(c.url);
     if (isHls && window.Hls && Hls.isSupported()) {
@@ -343,7 +407,8 @@
       hls.loadSource(c.url);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        buildQuality();
+        levels = hls.levels.map((l, i) => ({ i, h: l.height || 0, br: l.bitrate || 0 }));
+        buildMenu();
         hls.currentLevel = pickLevel(levels, qPref);
         video.play().catch(() => {});
       });
@@ -361,55 +426,97 @@
     }
   }
 
-  function buildQuality() {
-    levels = hls.levels.map((l, i) => ({ i, h: l.height || 0, br: l.bitrate || 0 }));
+  // --- ajustes (engranaje): calidad y opciones del reproductor ---
+  function buildMenu() {
     const heights = [...new Set(levels.map((l) => l.h).filter(Boolean))].sort((a, b) => b - a);
-    $('#bQual').hidden = heights.length < 2;
-    menu.innerHTML = `<button data-q="auto">Auto</button>` +
-      heights.map((h) => `<button data-q="${h}">${h}p</button>`).join('');
+    const quality = heights.length > 1
+      ? '<small>Calidad</small><button data-q="auto">Auto</button>' + heights.map((h) => `<button data-q="${h}">${h}p</button>`).join('')
+      : '';
+    menu.innerHTML = quality + '<small>Reproductor</small>' +
+      '<button data-act="prev">Canal anterior</button><button data-act="next">Canal siguiente</button>' +
+      (document.pictureInPictureEnabled ? '<button data-act="pip">Imagen en imagen</button>' : '') +
+      `<button data-act="mute">${video.muted ? 'Activar sonido' : 'Silenciar'}</button>`;
     markQuality();
   }
 
   function markQuality() {
     menu.querySelectorAll('[data-q]').forEach((b) => b.classList.toggle('on', b.dataset.q === String(qPref)));
-    let label = qPref === 'auto' ? 'Auto' : qPref + 'p';
-    if (qPref === 'auto' && hls && hls.currentLevel >= 0 && hls.levels[hls.currentLevel]?.height) {
-      label = `Auto · ${hls.levels[hls.currentLevel].height}p`;
+    const a = menu.querySelector('[data-q="auto"]');
+    if (a) {
+      const h = hls && hls.currentLevel >= 0 ? hls.levels[hls.currentLevel]?.height : 0;
+      a.textContent = qPref === 'auto' && h ? `Auto · ${h}p` : 'Auto';
     }
-    $('#bQual').textContent = label;
   }
 
-  $('#bQual').addEventListener('click', () => { menu.hidden = !menu.hidden; showCtl(); });
+  async function togglePip() {
+    try {
+      if (document.pictureInPictureElement) await document.exitPictureInPicture();
+      else if (current) await video.requestPictureInPicture();
+    } catch {}
+  }
+  function toggleMute() {
+    video.muted = !video.muted;
+    store.set('tvMuted', video.muted);
+  }
+
+  $('#bSet').addEventListener('click', () => {
+    if (menu.hidden) buildMenu();
+    menu.hidden = !menu.hidden;
+    showCtl();
+  });
   menu.addEventListener('click', (e) => {
-    const b = e.target.closest('[data-q]');
+    const b = e.target.closest('button');
     if (!b) return;
-    qPref = b.dataset.q === 'auto' ? 'auto' : +b.dataset.q;
-    store.set('tvQ', qPref);
-    if (hls) hls.currentLevel = pickLevel(levels, qPref);
-    markQuality();
+    if (b.dataset.q) {
+      qPref = b.dataset.q === 'auto' ? 'auto' : +b.dataset.q;
+      store.set('tvQ', qPref);
+      if (hls) hls.currentLevel = pickLevel(levels, qPref);
+      markQuality();
+    } else if (b.dataset.act === 'prev') zap(-1);
+    else if (b.dataset.act === 'next') zap(1);
+    else if (b.dataset.act === 'pip') togglePip();
+    else if (b.dataset.act === 'mute') toggleMute();
     menu.hidden = true;
     showCtl();
   });
 
+  // --- en vivo y barra de progreso ---
   function updateLive() {
-    const live = $('#liveBtn');
+    const s = video.seekable;
     const vod = !isLive && isFinite(video.duration);
-    live.hidden = !isLive;
-    $('#seek').hidden = !vod;
+    let pct = 100;
+    if (s.length) {
+      const a = s.start(0), b = s.end(s.length - 1);
+      if (b > a) pct = Math.min(100, Math.max(0, (video.currentTime - a) / (b - a) * 100));
+    }
+    let atLive = true;
     if (isLive) {
       const edge = hls && hls.liveSyncPosition;
-      const atLive = edge ? edge - video.currentTime < 12 : true;
-      live.classList.toggle('on', atLive);
-      live.textContent = atLive ? '● EN VIVO' : '↻ Ir al vivo';
+      atLive = edge ? edge - video.currentTime < 12 : pct > 97;
     }
+    const seek = $('#seek');
+    if (!seeking) { seek.value = pct * 10; seek.style.setProperty('--p', pct + '%'); }
+    const lb = $('#liveBtn');
+    lb.hidden = !isLive;
+    lb.classList.toggle('on', atLive);
+    lb.textContent = atLive ? '● EN VIVO' : '↻ Ir al vivo';
+    $('#ovLive').hidden = !isLive;
+    $('#liveTxt').textContent = vod ? 'Reproduciendo' : atLive ? 'Estás viendo la señal en directo' : 'Estás viendo unos segundos atrás';
   }
+
   $('#liveBtn').addEventListener('click', () => {
     if (hls && hls.liveSyncPosition) video.currentTime = hls.liveSyncPosition;
     else if (video.seekable.length) video.currentTime = video.seekable.end(video.seekable.length - 1);
     video.play().catch(() => {});
   });
-  $('#seek').addEventListener('input', (e) => {
-    if (isFinite(video.duration)) video.currentTime = e.target.value / 1000 * video.duration;
+  const seekEl = $('#seek');
+  seekEl.addEventListener('pointerdown', () => { seeking = true; });
+  ['pointerup', 'pointercancel', 'change'].forEach((ev) => seekEl.addEventListener(ev, () => { seeking = false; }));
+  seekEl.addEventListener('input', (e) => {
+    const v = e.target.value / 1000, s = video.seekable;
+    e.target.style.setProperty('--p', e.target.value / 10 + '%');
+    if (s.length) { const a = s.start(0), b = s.end(s.length - 1); video.currentTime = a + v * (b - a); }
+    else if (isFinite(video.duration)) video.currentTime = v * video.duration;
   });
 
   let lastTick = 0;
@@ -418,23 +525,22 @@
     if (now - lastTick < 1000) return;
     lastTick = now;
     updateLive();
-    if (!$('#seek').hidden && video.duration) $('#seek').value = video.currentTime / video.duration * 1000;
   });
-  video.addEventListener('loadedmetadata', () => { if (!hls) { isLive = !isFinite(video.duration); updateLive(); } });
+  video.addEventListener('loadedmetadata', () => { if (!hls) { isLive = !isFinite(video.duration); } updateLive(); });
 
+  // --- play / pausa ---
   function toggle() {
-    if (!current) { const c = lastCh || shown.find((x) => stateOf(x.url) !== 'bad'); if (c) play(c); return; }
+    if (!current) { const c = lastCh || playable()[0]; if (c) play(c); return; }
     if (video.paused) video.play().catch(() => {}); else video.pause();
   }
   $('#bPlay').addEventListener('click', toggle);
-  $('#bPrev').addEventListener('click', () => zap(-1));
-  $('#bNext').addEventListener('click', () => zap(1));
   $('#errRetry').addEventListener('click', () => { if (current) play(current); });
   $('#errNext').addEventListener('click', () => zap(1));
 
   video.addEventListener('play', () => { setIcon($('#bPlay'), 'i-pause'); showCtl(); });
   video.addEventListener('pause', () => { setIcon($('#bPlay'), 'i-play'); showCtl(); });
 
+  // --- cortes de señal: reintenta solo ---
   let stallT = null, stallStage = 0;
   function stalled() {
     if (!current) return;
@@ -470,52 +576,64 @@
   addEventListener('offline', () => msg('Sin conexión a internet.'));
   addEventListener('online', () => { if (current && !$('#err').hidden) play(current); else msg(''); });
 
-  const vol = $('#vol');
+  // --- volumen guardado ---
   video.volume = store.get('tvVol') ?? 1;
   video.muted = !!store.get('tvMuted');
-  vol.value = video.volume;
-  const syncMute = () => setIcon($('#bMute'), video.muted || video.volume === 0 ? 'i-mute' : 'i-vol');
-  syncMute();
-  vol.addEventListener('input', () => {
-    video.volume = +vol.value;
-    video.muted = video.volume === 0;
-    store.set('tvVol', video.volume);
-    store.set('tvMuted', video.muted);
-    syncMute();
-  });
-  $('#bMute').addEventListener('click', () => {
-    video.muted = !video.muted;
-    store.set('tvMuted', video.muted);
-    syncMute();
-  });
 
-  if (document.pictureInPictureEnabled) {
-    $('#bPip').hidden = false;
-    $('#bPip').addEventListener('click', async () => {
-      try {
-        if (document.pictureInPictureElement) await document.exitPictureInPicture();
-        else if (current) await video.requestPictureInPicture();
-      } catch {}
-    });
+  // --- reloj ---
+  const tick = () => { $('#clock').textContent = new Date().toLocaleTimeString('es-PE', { hour: 'numeric', minute: '2-digit' }); };
+  tick();
+  setInterval(tick, 20000);
+
+  // --- enviar a otra pantalla (si el navegador lo permite) ---
+  const cast = $('#bCast');
+  if ('remote' in video) {
+    cast.hidden = false;
+    cast.addEventListener('click', () => video.remote.prompt().catch(() => {}));
+  } else if (video.webkitShowPlaybackTargetPicker) {
+    cast.hidden = false;
+    cast.addEventListener('click', () => video.webkitShowPlaybackTargetPicker());
   }
 
-  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
-  $('#bFull').addEventListener('click', async () => {
+  // --- pantalla completa (gira a horizontal solo) ---
+  async function enterFs() {
     try {
-      if (fsEl()) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-      else if (box.requestFullscreen) await box.requestFullscreen();
+      if (box.requestFullscreen) await box.requestFullscreen();
       else if (box.webkitRequestFullscreen) box.webkitRequestFullscreen();
       else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
     } catch {}
-  });
+  }
+  async function exitFs() {
+    try { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch {}
+  }
+  $('#bFull').addEventListener('click', () => (fsEl() ? exitFs() : enterFs()));
+  $('#bBack').addEventListener('click', exitFs);
   const onFs = () => {
-    const on = !!fsEl();
+    const on = fsEl() === box;
+    box.classList.toggle('fs', on);
+    if (!on) panel.hidden = true;
     setIcon($('#bFull'), on ? 'i-fsx' : 'i-fs');
     try { if (on) window.screen.orientation.lock('landscape').catch(() => {}); else window.screen.orientation.unlock(); } catch {}
+    showCtl();
   };
   document.addEventListener('fullscreenchange', onFs);
   document.addEventListener('webkitfullscreenchange', onFs);
 
+  // --- deslizar arriba/abajo para cambiar de canal (solo en pantalla completa) ---
+  let t0 = null;
+  box.addEventListener('touchstart', (e) => {
+    const ok = box.classList.contains('fs') && e.touches.length === 1 && !e.target.closest('button,input,.tmenu,.panel');
+    t0 = ok ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null;
+  }, { passive: true });
+  box.addEventListener('touchend', (e) => {
+    if (!t0) return;
+    const t = e.changedTouches[0];
+    const dy = t.clientY - t0.y, dx = t.clientX - t0.x;
+    t0 = null;
+    if (Math.abs(dy) > 70 && Math.abs(dx) < 60) zap(dy < 0 ? 1 : -1);
+  }, { passive: true });
+
+  // --- que la pantalla no se apague mientras ves TV ---
   let wake = null;
   async function keepAwake(on) {
     try {
@@ -533,6 +651,7 @@
     if (document.visibilityState === 'visible' && !video.paused) keepAwake(true);
   });
 
+  // --- botones de la pantalla de bloqueo ---
   if ('mediaSession' in navigator) {
     const m = navigator.mediaSession;
     try {
@@ -543,19 +662,21 @@
     } catch {}
   }
 
-  // Teclado: solo cuando la sección TV en vivo está visible
+  // --- teclado: solo cuando la sección TV en vivo está visible ---
   addEventListener('keydown', (e) => {
     if ($('#tvView').hidden) return;
     if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
     const k = e.key.toLowerCase();
     if (e.code === 'Space' || k === 'k') { e.preventDefault(); toggle(); }
     else if (k === 'f') $('#bFull').click();
-    else if (k === 'm') $('#bMute').click();
+    else if (k === 'm') toggleMute();
     else if (e.key === 'ArrowUp') { e.preventDefault(); zap(-1); }
     else if (e.key === 'ArrowDown') { e.preventDefault(); zap(1); }
   });
 
-  if (lastCh) { $('#ovName').textContent = lastCh.name; msg('Último canal: ' + lastCh.name + ' · toca ▶ para verlo'); }
+  // Al abrir: muestra el último canal visto (se reproduce al tocar ▶)
+  if (lastCh) { setBrand(lastCh); msg('Último canal: ' + lastCh.name + ' · toca ▶ para verlo'); }
+  setIcon($('#bPlay'), 'i-play');
 
   // ======================================================================
   // 7) EVENTOS DE LA LISTA
@@ -573,13 +694,9 @@
     const s = e.target.closest('[data-star]');
     if (s) {
       const url = s.dataset.star;
-      const i = favs.findIndex((f) => f.url === url);
-      if (i >= 0) favs.splice(i, 1);
-      else {
-        const c = channels.find((x) => x.url === url) || current;
-        if (c) favs.push({ name: c.name, logo: c.logo, group: c.group, url: c.url });
-      }
-      store.set('tvFavs', favs);
+      const c = channels.find((x) => x.url === url) || favs.find((f) => f.url === url) || current;
+      if (c) toggleFav(c);
+      syncFav();
       draw();
       return;
     }
@@ -602,7 +719,6 @@
 
   $('#tvQ').addEventListener('input', (e) => { query = e.target.value; draw(); });
 
-  const sel = $('#country');
   sel.value = store.get('tvCountry') || 'pe';
   sel.addEventListener('change', () => { store.set('tvCountry', sel.value); loaded = true; loadCountry(sel.value); });
 
