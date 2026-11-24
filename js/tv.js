@@ -266,18 +266,31 @@
 
   // --- controles: se ocultan solos ---
   let hideT;
-  function showCtl() {
+  let firstPlay = false;
+  function showCtl(ms = 3500) {
     ov.classList.remove('hide');
     clearTimeout(hideT);
-    if (!video.paused && menu.hidden && panel.hidden && $('#err').hidden) hideT = setTimeout(() => ov.classList.add('hide'), 3500);
+    if (!video.paused && menu.hidden && panel.hidden && $('#err').hidden) hideT = setTimeout(() => ov.classList.add('hide'), ms);
   }
+  // Un toque en cualquier parte (también el centro) muestra los controles.
+  // Si estaban ocultos, ese toque solo los muestra: no pausa ni pulsa nada.
+  let hiddenAtDown = false;
+  box.addEventListener('pointerdown', () => { hiddenAtDown = ov.classList.contains('hide'); }, true);
   box.addEventListener('click', (e) => {
+    if (hiddenAtDown) {
+      hiddenAtDown = false;
+      e.stopPropagation();
+      e.preventDefault();
+      showCtl();
+      return;
+    }
     if (e.target.closest('button,input,.tmenu,.panel')) { showCtl(); return; }
     if (!menu.hidden) { menu.hidden = true; return; }
     if (!panel.hidden) { panel.hidden = true; return; }
-    if (ov.classList.contains('hide')) showCtl(); else ov.classList.add('hide');
-  });
-  box.addEventListener('mousemove', showCtl);
+    ov.classList.add('hide');
+  }, true);
+  // Solo el mouse real los muestra al moverse (el toque en celular dispara un mousemove falso)
+  box.addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') showCtl(); });
 
   const spin = (on) => { $('#spin').hidden = !on; box.classList.toggle('busy', on); };
   function showError(t) {
@@ -386,6 +399,7 @@
     hideError();
     spin(true);
     stop();
+    firstPlay = true;
     isLive = true;
     levels = [];
     buildMenu();
@@ -567,6 +581,7 @@
   video.addEventListener('playing', () => {
     if (!current) return;
     msg('En vivo: ' + current.name);
+    if (firstPlay) { firstPlay = false; showCtl(1500); }   // al arrancar, se ocultan solos enseguida
     if (stateOf(current.url) !== 'ok') {
       setState(current.url, 'ok');
       saveStatus();
