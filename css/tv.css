@@ -1,0 +1,94 @@
+/* TV en vivo: todo vive dentro de #tvView (CSS anidado) para no chocar con PictureReel */
+#tvView{
+  --a:var(--primary);--ink:#fff;--mut:var(--gray);--line:var(--border);
+  padding:92px 5% 40px;min-height:100vh;
+
+  h1{font-size:24px;font-weight:900;margin-bottom:4px}
+  .tmut{color:var(--mut);font-size:13px}
+  .i{width:26px;height:26px;fill:currentColor;pointer-events:none}
+  input[type=range]{touch-action:none}
+
+  /* Reproductor */
+  .player{position:sticky;top:72px;z-index:5;background:var(--bg);padding:12px 0 10px}
+  .screen{position:relative;aspect-ratio:16/9;background:#000;border-radius:14px;overflow:hidden;
+    border:1px solid var(--line);max-width:760px;margin:0 auto}
+  .screen:fullscreen,.screen:-webkit-full-screen{max-width:none;width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;border:0}
+  video{width:100%;height:100%;background:#000;object-fit:contain}
+  #tvMsg{max-width:760px;margin:6px auto 0;min-height:1.3em;font-size:13px;color:var(--mut)}
+
+  .ov{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;
+    background:linear-gradient(180deg,rgba(0,0,0,.7),transparent 30%,transparent 55%,rgba(0,0,0,.8));transition:opacity .25s}
+  .ov.hide{opacity:0}
+  .ov.hide button,.ov.hide input{pointer-events:none}
+  .ovtop{display:flex;align-items:center;gap:10px;padding:10px 12px}
+  .ovtop b{flex:1;min-width:0;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .live{flex:none;font-size:12px;font-weight:900;padding:5px 11px;border-radius:13px;background:rgba(255,255,255,.2)}
+  .live.on{background:var(--primary)}
+  .mid{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+  .tspin{width:54px;height:54px;border-radius:50%;border:5px solid rgba(255,255,255,.25);border-top-color:var(--a);animation:tvspin .9s linear infinite}
+  .terr{position:absolute;inset:0;z-index:2;background:rgba(0,0,0,.82);display:grid;place-content:center;justify-items:center;gap:14px;text-align:center;padding:20px}
+  .terr p{font-size:14px;max-width:340px}
+  .terr div{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .tpill{padding:0 18px;height:40px;border-radius:20px;font-weight:800;background:rgba(255,255,255,.16)}
+  .tpill.fill{background:var(--a);color:var(--ink)}
+
+  .ctl{padding:0 8px 8px}
+  .row{display:flex;align-items:center;gap:2px}
+  .ib{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}
+  .ib:active{background:rgba(255,255,255,.18)}
+  .ib.big{width:54px;height:54px;background:var(--a);color:var(--ink)}
+  .ib.big .i{width:30px;height:30px}
+  .grow{flex:1}
+  .q{flex:none;height:34px;padding:0 12px;border-radius:17px;background:rgba(255,255,255,.2);font-weight:800;font-size:13px}
+  .vol{width:90px;accent-color:var(--a)}
+  .seek{width:100%;accent-color:var(--a);margin:0 0 2px}
+  .tmenu{position:absolute;right:10px;bottom:68px;z-index:3;background:rgba(24,24,24,.97);border:1px solid var(--line);border-radius:12px;padding:6px;min-width:140px}
+  .tmenu button{display:block;width:100%;text-align:left;padding:11px 14px;border-radius:8px;font-weight:700}
+  .tmenu button.on{color:var(--a)}
+
+  /* Controles de la lista */
+  .tbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 10px}
+  .tbar input,.tbar select{background:var(--surface-2);color:#fff;border:1px solid var(--line);outline:0;border-radius:20px;padding:10px 14px;font:inherit;font-size:15px}
+  .tbar input{flex:1 1 200px;min-width:0;-webkit-user-select:text;user-select:text}
+  .tbar input::placeholder{color:var(--mut)}
+  .tbar select option{background:var(--surface);color:#fff}
+
+  .seg{display:flex;gap:8px;margin-bottom:8px}
+  .seg button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:42px;border-radius:21px;background:var(--surface-2);font-weight:800;color:var(--mut);transition:background .2s,color .2s}
+  .seg b{font-size:12.5px;padding:2px 8px;border-radius:10px;background:rgba(0,0,0,.35)}
+  .seg button.on{background:var(--a);color:var(--ink)}
+  .seg button[data-tab="bad"].on{background:#555}
+  .prog{display:flex;align-items:center;gap:10px;min-height:34px;margin-bottom:10px;font-size:13px;color:var(--mut)}
+  .prog span{flex:1;min-width:0}
+  .prog button{flex:none;padding:6px 12px;border-radius:16px;background:var(--surface-2);font-weight:700;font-size:12.5px}
+  .prog button:disabled{opacity:.5;pointer-events:none}
+
+  .tchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px}
+  .tchips::-webkit-scrollbar{display:none}
+  .tchip{flex:none;padding:8px 16px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);font-weight:600;font-size:13px;color:#ddd;white-space:nowrap}
+  .tchip.on{background:var(--a);border-color:var(--a);color:var(--ink)}
+
+  /* Canales */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .ch{position:relative;min-width:0;cursor:pointer;transition:transform .2s}
+  .ch:hover{transform:translateY(-3px)}
+  .tlogo{position:relative;aspect-ratio:16/10;border-radius:10px;overflow:hidden;display:grid;place-items:center;
+    background:linear-gradient(135deg,hsl(var(--h) 65% 40%),hsl(calc(var(--h) + 45) 65% 22%))}
+  .tlogo span{font-size:38px;font-weight:900;color:rgba(255,255,255,.88)}
+  .tlogo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10px;background:var(--surface)}
+  .ch.on .tlogo{outline:3px solid var(--a);outline-offset:2px}
+  .ch.bad{opacity:.5}
+  .ch p{font-size:14px;font-weight:700;margin-top:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ch small{display:block;font-size:12.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .star{position:absolute;top:6px;right:6px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.6);font-size:17px;line-height:1;color:#fff}
+  .star[aria-pressed=true]{color:#ffd54a}
+  .empty{color:var(--mut);padding:30px 4px;grid-column:1/-1;text-align:center}
+  .tnote{margin:26px auto 0;max-width:760px;font-size:12.5px;color:var(--mut);line-height:1.5}
+
+  @media (max-width:760px){
+    padding:78px 16px 96px;
+    .player{top:62px}
+    .vol{display:none}
+  }
+}
+@keyframes tvspin{to{transform:rotate(360deg)}}
