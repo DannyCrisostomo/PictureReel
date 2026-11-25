@@ -7,7 +7,13 @@
   const $ = (s) => document.querySelector(s);
   const video = $('#video');
 
-  const PLAYLIST = (cc) => `https://iptv-org.github.io/iptv/countries/${cc}.m3u`;
+  // 'all' = lista completa de iptv-org (se usa para buscar un canal por nombre en todo el mundo)
+  const PLAYLIST = (cc) => cc === 'all'
+    ? 'https://iptv-org.github.io/iptv/index.m3u'
+    : `https://iptv-org.github.io/iptv/countries/${cc}.m3u`;
+
+  const MIN_SEARCH = 3;      // letras mínimas para buscar en "Todo el mundo"
+  const MAX_SEARCH = 150;    // máximo de canales a verificar por búsqueda
 
   const GROUPS_ES = {
     General: 'General', News: 'Noticias', Music: 'Música', Sports: 'Deportes', Movies: 'Películas',
@@ -39,10 +45,13 @@
         line.replace(/([\w-]+)="([^"]*)"/g, (_, k, v) => (attrs[k] = v));
         const rest = line.replace(/([\w-]+)="[^"]*"/g, '');
         const name = rest.slice(rest.indexOf(',') + 1).trim();
+        // El tvg-id termina con el país: "DisneyChannel.us@SD" -> "US"
+        const idm = /\.([a-z]{2,3})(@|$)/i.exec(attrs['tvg-id'] || '');
         cur = {
           name: name || attrs['tvg-name'] || 'Canal',
           logo: attrs['tvg-logo'] || '',
           group: (attrs['group-title'] || 'Undefined').split(';')[0] || 'Undefined',
+          cc: idm ? idm[1].toUpperCase() : '',
           headers: false,
         };
       } else if (line.startsWith('#EXTVLCOPT') && cur) {
@@ -115,6 +124,8 @@
   const TTL = 60 * 60 * 1000;
   let channels = [];
   let shown = [];
+  let allList = null;        // lista completa (solo en modo "Todo el mundo")
+  let loaded = false;
   let tab = 'ok';
   let group = '';
   let favOnly = false;
@@ -135,30 +146,64 @@
   };
   const setState = (url, st) => status.set(url, [st, Date.now()]);
 
+  const sel = $('#country');
+  const isAll = () => sel.value === 'all';
+
   // ---------- 4) Cargar y verificar un país ----------
   let vTok = 0, vDone = 0, vTotal = 0;
 
+  const usable = (list, secure) => {
+    const seen = new Set();
+    return list.filter((c) =>
+      !c.headers &&
+      (!secure || c.url.startsWith('https:')) &&
+      !seen.has(c.url) && seen.add(c.url));
+  };
+
   async function loadCountry(cc) {
     vTok++;
+    vDone = 0; vTotal = 0;
     $('#tvGrid').innerHTML = '<p class="empty">Cargando canales…</p>';
     $('#prog').textContent = '';
     try {
       const res = await fetch(PLAYLIST(cc));
       if (!res.ok) throw new Error(res.status);
       const secure = location.protocol === 'https:';
-      const seen = new Set();
-      const cname = ($('#country').querySelector(`option[value="${cc}"]`) || {}).textContent || '';
-      channels = parseM3U(await res.text()).filter((c) =>
-        !c.headers &&
-        (!secure || c.url.startsWith('https:')) &&
-        !seen.has(c.url) && seen.add(c.url)).map((c) => ({ ...c, country: cname }));
+      const parsed = usable(parseM3U(await res.text()), secure);
       group = ''; favOnly = false;
-      draw();
-      verify(channels);
+
+      if (cc === 'all') {
+        // Modo búsqueda: guarda todo y muestra solo lo que coincida con lo escrito
+        allList = parsed.map((c) => ({ ...c, country: c.cc }));
+        channels = [];
+        searchAll();
+      } else {
+        allList = null;
+        const cname = ($('#country').querySelector(`option[value="${cc}"]`) || {}).textContent || '';
+        channels = parsed.map((c) => ({ ...c, country: cname }));
+        draw();
+        verify(channels);
+      }
     } catch {
       channels = [];
       $('#tvGrid').innerHTML = '<p class="empty">No se pudo cargar la lista. Revisa tu conexión.</p>';
     }
+  }
+
+  // Búsqueda en todo el mundo: filtra por nombre y verifica solo esos canales
+  function searchAll() {
+    vTok++;
+    vDone = 0; vTotal = 0;
+    const q = query.trim().toLowerCase();
+    group = ''; favOnly = false;
+    if (!allList || q.length < MIN_SEARCH) {
+      channels = [];
+      draw();
+      return;
+    }
+    channels = allList.filter((c) => c.name.toLowerCase().includes(q)).slice(0, MAX_SEARCH);
+    draw();
+    verify(channels);
   }
 
   async function verify(list, force = false) {
@@ -166,7 +211,7 @@
     const queue = list.filter((c) => force || !fresh(c.url));
     vDone = 0; vTotal = queue.length;
     progress();
-    if (!vTotal) return;
+    if (!vTotal) { draw(); return; }
 
     let last = 0;
     const worker = async () => {
@@ -213,9 +258,10 @@
   function card(c) {
     const cls = ['ch', current && current.url === c.url ? 'on' : '', stateOf(c.url) === 'bad' ? 'bad' : ''].join(' ');
     const logo = c.logo && c.logo.startsWith('https') ? `<img src="${esc(c.logo)}" alt="" loading="lazy" onerror="this.remove()">` : '';
+    const sub = isAll() && c.country ? `${groupName(c.group)} · ${c.country}` : groupName(c.group);
     return `<div class="${cls}" data-url="${esc(c.url)}" tabindex="0" role="button" aria-label="Ver ${esc(c.name)}">
       <div class="tlogo" style="--h:${hue(c.name)}"><span>${esc(c.name.charAt(0).toUpperCase())}</span>${logo}</div>
-      <p>${esc(c.name)}</p><small>${esc(groupName(c.group))}</small>
+      <p>${esc(c.name)}</p><small>${esc(sub)}</small>
       <button class="star" data-star="${esc(c.url)}" aria-pressed="${isFav(c.url)}" aria-label="Guardar canal">★</button>
     </div>`;
   }
@@ -231,7 +277,13 @@
 
     let empty = 'No hay canales con ese filtro.';
     if (favOnly) empty = 'Aún no guardaste canales con ★.';
-    else if (!inTab.length) {
+    else if (isAll() && q.length < MIN_SEARCH) {
+      empty = allList
+        ? `Escribe al menos ${MIN_SEARCH} letras del canal que buscas (por ejemplo, “Disney”).`
+        : 'Cargando la lista mundial…';
+    } else if (isAll() && !channels.length) {
+      empty = `No hay ningún canal llamado “${esc(query.trim())}” en la lista de iptv-org.`;
+    } else if (!inTab.length) {
       empty = verifying() ? 'Verificando canales…'
         : tab === 'ok' ? 'Ningún canal responde ahora mismo. Mira “Sin señal” o toca “Volver a verificar”.'
         : 'Todos los canales respondieron.';
@@ -245,7 +297,6 @@
   // 6) REPRODUCTOR (diseño tipo TV: número, logo, EN VIVO, reloj, panel de canales)
   // ======================================================================
   const ov = $('#ov'), box = $('#tvScreen'), menu = $('#qMenu'), panel = $('#chPanel');
-  const sel = $('#country');
   let hls = null;
   let isLive = true;
   let seeking = false;
@@ -732,15 +783,26 @@
     draw();
   });
 
-  $('#tvQ').addEventListener('input', (e) => { query = e.target.value; draw(); });
+  // Buscador: en un país filtra al instante; en "Todo el mundo" busca en la lista completa
+  let searchT;
+  $('#tvQ').addEventListener('input', (e) => {
+    query = e.target.value;
+    if (isAll()) {
+      clearTimeout(searchT);
+      searchT = setTimeout(searchAll, 450);
+    } else draw();
+  });
 
   sel.value = store.get('tvCountry') || 'pe';
-  sel.addEventListener('change', () => { store.set('tvCountry', sel.value); loaded = true; loadCountry(sel.value); });
+  sel.addEventListener('change', () => {
+    store.set('tvCountry', sel.value);
+    loaded = true;
+    loadCountry(sel.value);
+  });
 
   // ======================================================================
   // 8) CONEXIÓN CON PICTUREREEL
   // ======================================================================
-  let loaded = false;
 
   // Al entrar a la sección: carga la lista la primera vez; después solo reanuda la verificación
   function open() {
